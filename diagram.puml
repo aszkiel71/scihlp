@@ -1,0 +1,217 @@
+@startuml SciHlp_UML_Diagram
+
+skinparam classAttributeIconSize 0
+skinparam nodesep 50
+skinparam ranksep 50
+
+' ##########################
+' #       PAKIETY          #
+' ##########################
+
+frame "GUI" {
+  frame "AuthUI" as AuthUI {
+    class AuthUI {
+      + show_login_screen()
+      + show_register_screen()
+      - _login()
+      - _register()
+      - _clear_screen()
+    }
+  }
+
+  frame "MainUI" as MainUI {
+    class MainUI {
+      + show_main_screen()
+      - _logout()
+      - _clear_screen()
+    }
+
+    frame "Functionality" {
+      class Plotter {
+        + setup_ui()
+        + plot_function()
+        + create_default_plot()
+        - _draw_plot()
+      }
+
+      class WeatherFetcher {
+        + setup_ui()
+        + fetch_weather()
+        - _simulate_weather_api_call()
+        - _display_weather_data()
+      }
+
+      class TaskManager {
+        + setup_ui()
+        + populate_tasks()
+        + add_task()
+        + mark_task_done()
+        + remove_task()
+      }
+
+      class ProfileManager {
+        + setup_ui()
+        + update_profile()
+        + send_notification()
+      }
+    }
+  }
+}
+
+frame "Data" {
+  class UserManager {
+    - data_file: str
+    - data: dict
+    - current_user: dict
+
+    + __init__(data_file)
+    + load_data()
+    + save_data()
+    + login(username, password): bool
+    + register(username, password, email): tuple
+    + update_profile(email, password)
+    + logout()
+  }
+}
+
+frame "External Libraries" as libs {
+  frame "tkinter" as tk {
+    class "ttk.Notebook"
+    class "tk.Frame"
+    class "tk.Label"
+    class "tk.Entry"
+  }
+
+  frame "matplotlib" as plt {
+    class "Figure"
+    class "FigureCanvasTkAgg"
+  }
+
+  frame "Other" as other {
+    class "json"
+    class "smtplib"
+    class "re"
+    class "datetime"
+    class "numpy"
+  }
+}
+
+' ##########################
+' #       ZALEŻNOŚCI       #
+' ##########################
+
+SciHlp --> UserManager
+SciHlp --> AuthUI
+SciHlp --> MainUI
+
+AuthUI --> UserManager: uses
+AuthUI ..> tk: uses widgets
+
+MainUI --> UserManager: uses
+MainUI --> Plotter
+MainUI --> WeatherFetcher
+MainUI --> TaskManager
+MainUI --> ProfileManager
+MainUI ..> tk: uses widgets
+
+Plotter --> plt: uses
+Plotter --> other.numpy: uses
+Plotter ..> tk: embeds
+
+WeatherFetcher ..> tk: embeds
+WeatherFetcher --> other.datetime: uses
+
+TaskManager --> UserManager: updates
+TaskManager ..> tk: uses widgets
+
+ProfileManager --> UserManager: updates
+ProfileManager --> other.re: validates email
+ProfileManager --> other.smtplib: notifications
+ProfileManager ..> tk: uses widgets
+
+UserManager --> other.json: persists data
+UserManager --> other.re: email validation
+
+' ##########################
+' #       INTERFEJSY       #
+' ##########################
+
+interface "Callback" as callbacks {
+  + _on_login_success()
+  + _on_logout()
+}
+
+SciHlp ..|> callbacks
+AuthUI ..> callbacks: notifies
+MainUI ..> callbacks: notifies
+
+' ##########################
+' #       DODATKOWE INFO   #
+' ##########################
+
+note top of SciHlp
+  Główna klasa aplikacji
+  Zarządza cyklem życia UI
+  Inicjalizuje wszystkie komponenty
+  Rozmiar okna: 900x600
+  Minimalny rozmiar: 800x600
+end note
+
+note bottom of UserManager
+  Dane przechowywane w data.json
+  Struktura danych:
+  {
+    "users": [
+      {
+        "login": str,
+        "password": str,
+        "email": str,
+        "tasks": list[str]
+      }
+    ]
+  }
+  Domyślny użytkownik: admin/admin
+end note
+
+note right of Plotter
+  Obsługuje funkcje matematyczne:
+  - sin, cos, tan
+  - exp, log, sqrt
+  - operatory: +-*/**
+  Zakres x: -10 do 10
+  Używa numpy do obliczeń
+  Matplotlib do wizualizacji
+end note
+
+note left of WeatherFetcher
+  Symulowane API pogodowe
+  Wyświetla:
+  - temperaturę
+  - wilgotność
+  - ciśnienie
+  - prędkość wiatru
+  - opis
+  Potencjalnie można podpiąć prawdziwe API
+end note
+
+note right of TaskManager
+  Funkcjonalność To-Do:
+  - dodawanie zadań
+  - oznaczanie jako wykonane
+  - usuwanie zadań
+  Zadania przechowywane w:
+  UserManager.current_user["tasks"]
+  Format zadań wykonanych:
+  "[DONE] task_text"
+end note
+
+note left of ProfileManager
+  Zarządza:
+  - emailem użytkownika
+  - hasłem
+  Wysyła notyfikacje email
+  (symulowane przez smtplib)
+  Waliduje format emaila
+end note
+
+@enduml
