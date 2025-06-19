@@ -1,3 +1,5 @@
+(The project was created using MVC and SOLID rules)
+
 # SciHlp - Data Analysis & Organization Tool
 
 SciHlp is a desktop application that integrates several useful functionalities for data analysis and organization. The application provides a user-friendly interface for visualizing mathematical functions, fetching weather data, managing a to-do list, and handling user profiles with email notifications.
@@ -90,4 +92,4 @@ This project is open-source and available for personal and educational use.
 
 ## Contributors
 
-- Wojtek Aszkiełowicz [353873]
+- aszkiel71
