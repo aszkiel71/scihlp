@@ -1,217 +1,247 @@
-@startuml SciHlp_UML_Diagram
-
-skinparam classAttributeIconSize 0
-skinparam nodesep 50
-skinparam ranksep 50
-
-' ##########################
-' #       PAKIETY          #
-' ##########################
-
-frame "GUI" {
-  frame "AuthUI" as AuthUI {
-    class AuthUI {
-      + show_login_screen()
-      + show_register_screen()
-      - _login()
-      - _register()
-      - _clear_screen()
+classDiagram
+    %% ===========================
+    %% MODEL LAYER
+    %% ===========================
+    
+    class UserModel {
+        -data_file: str
+        -data: dict
+        -current_user: dict
+        +load_data()
+        +save_data()
+        +authenticate_user(username, password): bool
+        +register_new_user(username, password, email): tuple
+        +update_current_user_profile(email, password): tuple
+        +logout_user()
+        +get_current_user_data(): dict
     }
-  }
-
-  frame "MainUI" as MainUI {
-    class MainUI {
-      + show_main_screen()
-      - _logout()
-      - _clear_screen()
+    
+    class TaskModel {
+        -user_model: UserModel
+        +add_new_task(task_text): bool
+        +get_all_tasks(): list
+        +mark_task_as_done(task_index): bool
+        +remove_task_by_index(task_index): bool
+    }
+    
+    class PlotModel {
+        -x_min: int
+        -x_max: int
+        -num_points: int
+        +generate_function_data(function_string): tuple
+        +prepare_safe_function(function_str): str
+        +get_default_data(): tuple
+    }
+    
+    class WeatherModel {
+        -api_key: str
+        +fetch_weather_for_location(location): dict
+        +simulate_weather_response(location): dict
+    }
+    
+    class NotificationModel {
+        -smtp_server: str
+        -smtp_port: int
+        +send_email_notification(email, message): tuple
     }
 
-    frame "Functionality" {
-      class Plotter {
-        + setup_ui()
-        + plot_function()
-        + create_default_plot()
-        - _draw_plot()
-      }
-
-      class WeatherFetcher {
-        + setup_ui()
-        + fetch_weather()
-        - _simulate_weather_api_call()
-        - _display_weather_data()
-      }
-
-      class TaskManager {
-        + setup_ui()
-        + populate_tasks()
-        + add_task()
-        + mark_task_done()
-        + remove_task()
-      }
-
-      class ProfileManager {
-        + setup_ui()
-        + update_profile()
-        + send_notification()
-      }
+    %% ===========================
+    %% VIEW LAYER
+    %% ===========================
+    
+    class AuthView {
+        -parent: widget
+        -controller: AuthController
+        -login_entry: Entry
+        -password_entry: Entry
+        +set_controller(controller)
+        +show_login_screen()
+        +show_register_screen()
+        +get_login_data(): tuple
+        +get_register_data(): tuple
+        +handle_login_click()
+        +handle_register_click()
     }
-  }
-}
+    
+    class PlotView {
+        -parent: widget
+        -controller: PlotController
+        -function_entry: Entry
+        -plot_frame: Frame
+        -canvas: Canvas
+        +set_controller(controller)
+        +setup_ui()
+        +get_function_input(): str
+        +display_plot(x_data, y_data, title)
+        +handle_plot_click()
+    }
+    
+    class WeatherView {
+        -parent: widget
+        -controller: WeatherController
+        -location_entry: Entry
+        -weather_data_frame: Frame
+        +set_controller(controller)
+        +setup_ui()
+        +get_location_input(): str
+        +display_weather_data(weather_data)
+        +handle_fetch_click()
+    }
+    
+    class TaskView {
+        -parent: widget
+        -controller: TaskController
+        -task_entry: Entry
+        -tasks_listbox: Listbox
+        +set_controller(controller)
+        +setup_ui()
+        +get_task_input(): str
+        +get_selected_task_index(): int
+        +update_tasks_display(tasks)
+        +handle_add_click()
+        +handle_mark_done_click()
+        +handle_remove_click()
+    }
+    
+    class ProfileView {
+        -parent: widget
+        -controller: ProfileController
+        -email_var: StringVar
+        -password_var: StringVar
+        -notification_entry: Entry
+        +set_controller(controller)
+        +setup_ui()
+        +set_user_data(login, email, password)
+        +get_profile_data(): tuple
+        +get_notification_message(): str
+        +handle_update_click()
+        +handle_send_click()
+    }
+    
+    class MainView {
+        -parent: widget
+        -controller: MainController
+        -notebook: Notebook
+        -plot_view: PlotView
+        -weather_view: WeatherView
+        -task_view: TaskView
+        -profile_view: ProfileView
+        +set_controller(controller)
+        +setup_main_interface()
+        +handle_logout_click()
+    }
 
-frame "Data" {
-  class UserManager {
-    - data_file: str
-    - data: dict
-    - current_user: dict
+    %% ===========================
+    %% CONTROLLER LAYER
+    %% ===========================
+    
+    class AuthController {
+        -user_model: UserModel
+        -auth_view: AuthView
+        -main_controller: MainController
+        +set_main_controller(main_controller)
+        +process_login()
+        +process_registration()
+        +show_login_form()
+        +show_register_form()
+    }
+    
+    class PlotController {
+        -plot_model: PlotModel
+        -plot_view: PlotView
+        +show_default_plot()
+        +create_plot()
+    }
+    
+    class WeatherController {
+        -weather_model: WeatherModel
+        -weather_view: WeatherView
+        +fetch_weather_data()
+    }
+    
+    class TaskController {
+        -task_model: TaskModel
+        -task_view: TaskView
+        +refresh_tasks_display()
+        +add_task()
+        +mark_task_done()
+        +remove_task()
+    }
+    
+    class ProfileController {
+        -user_model: UserModel
+        -notification_model: NotificationModel
+        -profile_view: ProfileView
+        +refresh_profile_data()
+        +update_profile()
+        +send_notification()
+    }
+    
+    class MainController {
+        -root: Tk
+        -user_model: UserModel
+        -task_model: TaskModel
+        -weather_model: WeatherModel
+        -plot_model: PlotModel
+        -notification_model: NotificationModel
+        -auth_view: AuthView
+        -main_view: MainView
+        -auth_controller: AuthController
+        +show_main_application()
+        +logout_user()
+    }
+    
+    class SciHlpApp {
+        -root: Tk
+        -main_controller: MainController
+        +run()
+    }
 
-    + __init__(data_file)
-    + load_data()
-    + save_data()
-    + login(username, password): bool
-    + register(username, password, email): tuple
-    + update_profile(email, password)
-    + logout()
-  }
-}
-
-frame "External Libraries" as libs {
-  frame "tkinter" as tk {
-    class "ttk.Notebook"
-    class "tk.Frame"
-    class "tk.Label"
-    class "tk.Entry"
-  }
-
-  frame "matplotlib" as plt {
-    class "Figure"
-    class "FigureCanvasTkAgg"
-  }
-
-  frame "Other" as other {
-    class "json"
-    class "smtplib"
-    class "re"
-    class "datetime"
-    class "numpy"
-  }
-}
-
-' ##########################
-' #       ZALEŻNOŚCI       #
-' ##########################
-
-SciHlp --> UserManager
-SciHlp --> AuthUI
-SciHlp --> MainUI
-
-AuthUI --> UserManager: uses
-AuthUI ..> tk: uses widgets
-
-MainUI --> UserManager: uses
-MainUI --> Plotter
-MainUI --> WeatherFetcher
-MainUI --> TaskManager
-MainUI --> ProfileManager
-MainUI ..> tk: uses widgets
-
-Plotter --> plt: uses
-Plotter --> other.numpy: uses
-Plotter ..> tk: embeds
-
-WeatherFetcher ..> tk: embeds
-WeatherFetcher --> other.datetime: uses
-
-TaskManager --> UserManager: updates
-TaskManager ..> tk: uses widgets
-
-ProfileManager --> UserManager: updates
-ProfileManager --> other.re: validates email
-ProfileManager --> other.smtplib: notifications
-ProfileManager ..> tk: uses widgets
-
-UserManager --> other.json: persists data
-UserManager --> other.re: email validation
-
-' ##########################
-' #       INTERFEJSY       #
-' ##########################
-
-interface "Callback" as callbacks {
-  + _on_login_success()
-  + _on_logout()
-}
-
-SciHlp ..|> callbacks
-AuthUI ..> callbacks: notifies
-MainUI ..> callbacks: notifies
-
-' ##########################
-' #       DODATKOWE INFO   #
-' ##########################
-
-note top of SciHlp
-  Główna klasa aplikacji
-  Zarządza cyklem życia UI
-  Inicjalizuje wszystkie komponenty
-  Rozmiar okna: 900x600
-  Minimalny rozmiar: 800x600
-end note
-
-note bottom of UserManager
-  Dane przechowywane w data.json
-  Struktura danych:
-  {
-    "users": [
-      {
-        "login": str,
-        "password": str,
-        "email": str,
-        "tasks": list[str]
-      }
-    ]
-  }
-  Domyślny użytkownik: admin/admin
-end note
-
-note right of Plotter
-  Obsługuje funkcje matematyczne:
-  - sin, cos, tan
-  - exp, log, sqrt
-  - operatory: +-*/**
-  Zakres x: -10 do 10
-  Używa numpy do obliczeń
-  Matplotlib do wizualizacji
-end note
-
-note left of WeatherFetcher
-  Symulowane API pogodowe
-  Wyświetla:
-  - temperaturę
-  - wilgotność
-  - ciśnienie
-  - prędkość wiatru
-  - opis
-  Potencjalnie można podpiąć prawdziwe API
-end note
-
-note right of TaskManager
-  Funkcjonalność To-Do:
-  - dodawanie zadań
-  - oznaczanie jako wykonane
-  - usuwanie zadań
-  Zadania przechowywane w:
-  UserManager.current_user["tasks"]
-  Format zadań wykonanych:
-  "[DONE] task_text"
-end note
-
-note left of ProfileManager
-  Zarządza:
-  - emailem użytkownika
-  - hasłem
-  Wysyła notyfikacje email
-  (symulowane przez smtplib)
-  Waliduje format emaila
-end note
-
-@enduml
+    %% ===========================
+    %% RELATIONSHIPS
+    %% ===========================
+    
+    %% Model Dependencies
+    TaskModel --> UserModel : uses
+    
+    %% Controller-Model Relationships
+    AuthController --> UserModel : controls
+    TaskController --> TaskModel : controls
+    WeatherController --> WeatherModel : controls
+    PlotController --> PlotModel : controls
+    ProfileController --> UserModel : controls
+    ProfileController --> NotificationModel : controls
+    
+    %% Controller-View Relationships
+    AuthController --> AuthView : controls
+    TaskController --> TaskView : controls
+    WeatherController --> WeatherView : controls
+    PlotController --> PlotView : controls
+    ProfileController --> ProfileView : controls
+    
+    %% View-Controller References
+    AuthView --> AuthController : calls
+    PlotView --> PlotController : calls
+    WeatherView --> WeatherController : calls
+    TaskView --> TaskController : calls
+    ProfileView --> ProfileController : calls
+    MainView --> MainController : calls
+    
+    %% Main Controller Relationships
+    MainController --> UserModel : manages
+    MainController --> TaskModel : manages
+    MainController --> WeatherModel : manages
+    MainController --> PlotModel : manages
+    MainController --> NotificationModel : manages
+    MainController --> AuthView : manages
+    MainController --> MainView : manages
+    MainController --> AuthController : coordinates
+    
+    %% View Composition
+    MainView --> PlotView : contains
+    MainView --> WeatherView : contains
+    MainView --> TaskView : contains
+    MainView --> ProfileView : contains
+    
+    %% Application Entry Point
+    SciHlpApp --> MainController : creates
